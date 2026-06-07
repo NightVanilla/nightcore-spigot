@@ -21,6 +21,10 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- ExcellentCrates is not published to any public Maven repository, but the
+             plugin jar is freely available on Hangar. It is fetched and installed into
+             the local repository below so the 'main' module can resolve it at build time. -->
+        <excellentcrates.version>6.4.1</excellentcrates.version>
     </properties>
 
     <distributionManagement>
@@ -50,6 +54,58 @@
                         <goals>
                             <goal>jar</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Download the ExcellentCrates jar from Hangar (it is not in any Maven repo).
+                 Runs only on this root reactor project, which builds before 'main'. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <inherited>false</inherited>
+                <executions>
+                    <execution>
+                        <id>download-excellentcrates</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <mkdir dir="${project.build.directory}/dependencies"/>
+                                <get src="https://hangarcdn.papermc.io/plugins/NightExpress/ExcellentCrates/versions/${excellentcrates.version}/PAPER/ExcellentCrates-${excellentcrates.version}.jar"
+                                     dest="${project.build.directory}/dependencies/ExcellentCrates-${excellentcrates.version}.jar"
+                                     skipexisting="true"
+                                     verbose="true"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Install the downloaded ExcellentCrates jar into the local repository so
+                 the provided-scope dependency in 'main' resolves. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <version>3.1.1</version>
+                <inherited>false</inherited>
+                <executions>
+                    <execution>
+                        <id>install-excellentcrates</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <configuration>
+                            <groupId>su.nightexpress.excellentcrates</groupId>
+                            <artifactId>ExcellentCrates</artifactId>
+                            <version>${excellentcrates.version}</version>
+                            <packaging>jar</packaging>
+                            <file>${project.build.directory}/dependencies/ExcellentCrates-${excellentcrates.version}.jar</file>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

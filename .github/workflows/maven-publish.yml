@@ -19,7 +19,9 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          # JDK 25 is required to read the ExcellentEconomy dependency (Java 25 bytecode).
+          # The plugin itself is still compiled to Java 21 (see maven.compiler.* in pom.xml).
+          java-version: '25'
           cache: maven
 
       - name: Maven Build
